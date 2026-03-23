@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+  <!-- Wide foundation base -->
+  <rect x="19" y="86" width="59" height="9" rx="1" fill="var(--piece-fill, #F5E6CA)" stroke="var(--piece-stroke, #4A3728)" stroke-width="3" stroke-linejoin="round"/>
+  
+  <!-- Stepped second base -->
+  <rect x="25" y="79.5" width="49" height="7" fill="var(--piece-fill, #F5E6CA)" stroke="var(--piece-stroke, #4A3728)" stroke-width="3" stroke-linejoin="round"/>
+  
+  <!-- Camel body (elongated, steppe-cavalry silhouette) -->
+  <path d="M30,57 L29.5,70 L33,74 L53,74 L61,68 L63,59 L58,51 L43,48 Z" fill="var(--piece-fill, #F5E6CA)" stroke="var(--piece-stroke, #4A3728)" stroke-width="3" stroke-linejoin="round"/>
+  
+  <!-- Single prominent hump (clear Timurid geometric curve) -->
+  <path d="M41,50 C41,40 45.5,35 51,37 C57,39 59.5,46 60.5,52 L58,51 Z" fill="var(--piece-fill, #F5E6CA)" stroke="var(--piece-stroke, #4A3728)" stroke-width="3" stroke-linejoin="round"/>
+  
+  <!-- Long curved neck (distinctly arched, shorter than Giraffe) -->
+  <path d="M57,51 C59,39 57,29 53,23" fill="none" stroke="var(--piece-stroke, #4A3728)" stroke-width="9" stroke-linecap="round"/>
+  <path d="M57,51 C59,39 57,29 53,23" fill="none" stroke="var(--piece-stroke, #F5E6CA)" stroke-width="5.5" stroke-linecap="round"/>
+  
+  <!-- Head with distinctive long snout (Persian miniature elegance) -->
+  <path d="M50.5,21 L49,18 L55.5,14 L63.5,19 L64.5,24 L55,26 Z" fill="var(--piece-fill, #F5E6CA)" stroke="var(--piece-stroke, #4A3728)" stroke-width="2.8" stroke-linejoin="round"/>
+  
+  <!-- Ear (pointed, alert) -->
+  <path d="M51.5,17 L48.5,12 L50.5,13 Z" fill="var(--piece-fill, #F5E6CA)" stroke="var(--piece-stroke, #4A3728)" stroke-width="2"/>
+  
+  <!-- Eye (piercing geometric dot) -->
+  <circle cx="59" cy="21" r="1.4" fill="var(--piece-fill, #4A3728)"/>
+  
+  <!-- Tail (flowing desert detail) -->
+  <path d="M29.5,64 C26.5,66 25,68 26.5,73" fill="none" stroke="var(--piece-stroke, #4A3728)" stroke-width="3" stroke-linecap="round"/>
+  
+  <!-- Persian harness strap (Timurid decorative line) -->
+  <path d="M32,60 L56,58" fill="none" stroke="var(--piece-stroke, #4A3728)" stroke-width="2.2"/>
+</svg>

@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+  <!-- Thin small base platform -->
+  <rect x="24.5" y="88" width="51" height="6" rx="1" fill="var(--piece-fill, #F5E6CA)" stroke="var(--piece-stroke, #4A3728)" stroke-width="3" stroke-linejoin="round"/>
+  
+  <!-- Compact horse neck and body silhouette (strong arch facing right, scaled to ~40% vertical occupancy) -->
+  <path d="M38.5,68 C36.5,58 37,49 42,40 C46.5,32 52.5,27 62,26 C72,26 77.5,32 80.5,42 L81.5,51 C80,60 73,65 53.5,69 L40.5,70 Z" fill="var(--piece-fill, #F5E6CA)" stroke="var(--piece-stroke, #4A3728)" stroke-width="3.3" stroke-linejoin="round"/>
+  
+  <!-- Head and muzzle refinement -->
+  <path d="M70.5,27 L76.5,24.5 L82.5,27 L84,35 L82.5,40 L73.5,41 Z" fill="var(--piece-fill, #F5E6CA)" stroke="var(--piece-stroke, #4A3728)" stroke-width="2.8" stroke-linejoin="round"/>
+  
+  <!-- Elegant pointed ear -->
+  <path d="M59.5,21 L55.5,15 L64,18 Z" fill="var(--piece-fill, #F5E6CA)" stroke="var(--piece-stroke, #4A3728)" stroke-width="2.4" stroke-linejoin="round"/>
+  
+  <!-- Flowing mane (3 Persian-style curves) -->
+  <path d="M38.5,59 C37,48 39.5,36 48,27" fill="none" stroke="var(--piece-stroke, #4A3728)" stroke-width="3.8" stroke-linecap="round"/>
+  <path d="M41,64 C41,52 45.5,39 55,30" fill="none" stroke="var(--piece-stroke, #4A3728)" stroke-width="3.3" stroke-linecap="round"/>
+  <path d="M45.5,67 C47,56 51.5,44 61,34" fill="none" stroke="var(--piece-stroke, #4A3728)" stroke-width="2.8" stroke-linecap="round"/>
+  
+  <!-- Eye -->
+  <ellipse cx="76.8" cy="31.8" rx="1.75" ry="2.1" fill="var(--piece-fill, #4A3728)"/>
+  
+  <!-- Nostril -->
+  <ellipse cx="81.5" cy="35" rx="1.1" ry="1.25" fill="var(--piece-fill, #4A3728)"/>
+  
+  <!-- Mouth -->
+  <path d="M81.5,39 L85.5,39" fill="none" stroke="var(--piece-stroke, #4A3728)" stroke-width="1.8"/>
+</svg>

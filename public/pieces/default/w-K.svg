@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+  <!-- Base platform 1 (widest, commanding foundation) -->
+  <rect x="22" y="88" width="56" height="7" rx="1" fill="var(--piece-fill, #4A3728)" stroke="var(--piece-stroke, #F5E6CA)" stroke-width="3" stroke-linejoin="round"/>
+  
+  <!-- Base platform 2 (stepped inward) -->
+  <rect x="27" y="82" width="46" height="6" fill="var(--piece-fill, #4A3728)" stroke="var(--piece-stroke, #F5E6CA)" stroke-width="3" stroke-linejoin="round"/>
+  
+  <!-- Base platform 3 (narrower pedestal) -->
+  <rect x="33" y="76" width="34" height="6" fill="var(--piece-fill, #4A3728)" stroke="var(--piece-stroke, #F5E6CA)" stroke-width="3" stroke-linejoin="round"/>
+  
+  <!-- Main body shaft (tall, narrow, geometric taper) -->
+  <rect x="41" y="48" width="18" height="29" rx="1.5" fill="var(--piece-fill, #4A3728)" stroke="var(--piece-stroke, #F5E6CA)" stroke-width="3" stroke-linejoin="round"/>
+  
+  <!-- Flared upper body/head (regal widening before crown) -->
+  <path d="M41,48 L36,40 L36,32 L64,32 L64,40 L59,48 Z" fill="var(--piece-fill, #4A3728)" stroke="var(--piece-stroke, #F5E6CA)" stroke-width="3" stroke-linejoin="round"/>
+  
+  <!-- Crown band (broad ornate base for peaks) -->
+  <rect x="36.5" y="28" width="27" height="5" fill="var(--piece-fill, #4A3728)" stroke="var(--piece-stroke, #F5E6CA)" stroke-width="3" stroke-linejoin="round"/>
+  
+  <!-- Timurid royal crown: 5 pointed geometric peaks (center tallest, commanding silhouette) -->
+  <path d="M36.5,28 L39.5,18 L44,25 L46.5,9 L50,4 L53.5,9 L56,25 L61,18 L63.5,28 L36.5,28 Z" fill="var(--piece-fill, #4A3728)" stroke="var(--piece-stroke, #F5E6CA)" stroke-width="3" stroke-linejoin="round"/>
+  
+  <!-- Central geometric Islamic pattern divider (robe line) -->
+  <line x1="50" y1="73" x2="50" y2="31" stroke="var(--piece-stroke, #F5E6CA)" stroke-width="2.5"/>
+  
+  <!-- Ornamental belt band (Persian miniature elegance) -->
+  <rect x="39" y="54" width="22" height="3" fill="var(--piece-fill, #4A3728)" stroke="var(--piece-stroke, #F5E6CA)" stroke-width="2"/>
+</svg>

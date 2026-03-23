@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+  <!-- Heavy wide foundation base (industrial platform) -->
+  <rect x="13.5" y="83" width="73" height="12" rx="1" fill="var(--piece-fill, #4A3728)" stroke="var(--piece-stroke, #F5E6CA)" stroke-width="3" stroke-linejoin="round"/>
+  
+  <!-- Stepped carriage platform -->
+  <rect x="19" y="75" width="62" height="9" fill="var(--piece-fill, #4A3728)" stroke="var(--piece-stroke, #F5E6CA)" stroke-width="3" stroke-linejoin="round"/>
+  
+  <!-- Main armored siege body (square, heavy tower housing) -->
+  <rect x="28" y="47" width="37" height="29" rx="1.5" fill="var(--piece-fill, #4A3728)" stroke="var(--piece-stroke, #F5E6CA)" stroke-width="3" stroke-linejoin="round"/>
+  
+  <!-- Protective roof overhang (mechanical cover) -->
+  <rect x="25.5" y="42.5" width="42" height="5.5" fill="var(--piece-fill, #4A3728)" stroke="var(--piece-stroke, #F5E6CA)" stroke-width="3" stroke-linejoin="round"/>
+  
+  <!-- Long battering ram beam (protruding forward-right) -->
+  <rect x="63" y="52" width="29" height="8" rx="1" fill="var(--piece-fill, #4A3728)" stroke="var(--piece-stroke, #F5E6CA)" stroke-width="3" stroke-linejoin="round"/>
+  
+  <!-- Reinforced ram head (heavy striking end) -->
+  <rect x="89.5" y="48.5" width="8" height="14" rx="1.5" fill="var(--piece-fill, #4A3728)" stroke="var(--piece-stroke, #F5E6CA)" stroke-width="3" stroke-linejoin="round"/>
+  
+  <!-- Rear wheel (geometric mechanical) -->
+  <circle cx="27" cy="80.5" r="6.8" fill="var(--piece-fill, #4A3728)" stroke="var(--piece-stroke, #F5E6CA)" stroke-width="3"/>
+  <circle cx="27" cy="80.5" r="2.8" fill="var(--piece-fill, #F5E6CA)"/>
+  
+  <!-- Front wheel -->
+  <circle cx="68" cy="80.5" r="6.8" fill="var(--piece-fill, #4A3728)" stroke="var(--piece-stroke, #F5E6CA)" stroke-width="3"/>
+  <circle cx="68" cy="80.5" r="2.8" fill="var(--piece-fill, #F5E6CA)"/>
+  
+  <!-- Diagonal structural brace (Timurid geometric detail) -->
+  <path d="M30.5,47 L40,66" fill="none" stroke="var(--piece-stroke, #F5E6CA)" stroke-width="2.5"/>
+</svg>

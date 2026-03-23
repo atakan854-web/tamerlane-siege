@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+  <!-- Wide foundation base -->
+  <rect x="20.5" y="87" width="59" height="8.5" fill="var(--piece-fill, #4A3728)" stroke="var(--piece-stroke, #F5E6CA)" stroke-width="3" stroke-linejoin="round"/>
+  
+  <!-- Stepped second base -->
+  <rect x="26" y="80" width="48" height="7" fill="var(--piece-fill, #4A3728)" stroke="var(--piece-stroke, #F5E6CA)" stroke-width="3" stroke-linejoin="round"/>
+  
+  <!-- Tall advisor body (elegant robe shape) -->
+  <rect x="37" y="48" width="26" height="33" rx="1.5" fill="var(--piece-fill, #4A3728)" stroke="var(--piece-stroke, #F5E6CA)" stroke-width="3" stroke-linejoin="round"/>
+  
+  <!-- Upper body / collar area -->
+  <rect x="35" y="43" width="30" height="6" fill="var(--piece-fill, #4A3728)" stroke="var(--piece-stroke, #F5E6CA)" stroke-width="3" stroke-linejoin="round"/>
+  
+  <!-- Advisor pointed hat base band -->
+  <rect x="36" y="35" width="28" height="5" fill="var(--piece-fill, #4A3728)" stroke="var(--piece-stroke, #F5E6CA)" stroke-width="3" stroke-linejoin="round"/>
+  
+  <!-- Tall pointed hat with Timurid elegance (single peak, clearly different from King) -->
+  <path d="M 36,35 L 46.5,14 L 50,9 L 53.5,14 L 64,35 L 36,35 Z" fill="var(--piece-fill, #4A3728)" stroke="var(--piece-stroke, #F5E6CA)" stroke-width="3" stroke-linejoin="round"/>
+  
+  <!-- Diagonal geometric pattern (Islamic design representing Ferz diagonal move) -->
+  <line x1="41" y1="29" x2="59" y2="29" stroke="var(--piece-stroke, #F5E6CA)" stroke-width="2"/>
+  <line x1="44" y1="23" x2="56" y2="33" stroke="var(--piece-stroke, #F5E6CA)" stroke-width="2"/>
+  <line x1="56" y1="23" x2="44" y2="33" stroke="var(--piece-stroke, #F5E6CA)" stroke-width="2"/>
+</svg>

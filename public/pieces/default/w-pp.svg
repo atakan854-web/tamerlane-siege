@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+  <!-- Base platform 1 -->
+  <rect x="21" y="87" width="58" height="8" rx="1" fill="var(--piece-fill, #4A3728)" stroke="var(--piece-stroke, #F5E6CA)" stroke-width="3" stroke-linejoin="round"/>
+  
+  <!-- Base platform 2 -->
+  <rect x="27" y="81" width="46" height="7" fill="var(--piece-fill, #4A3728)" stroke="var(--piece-stroke, #F5E6CA)" stroke-width="3" stroke-linejoin="round"/>
+  
+  <!-- Tall soldier body (slightly taller for special status) -->
+  <path d="M34,49 L34,77 L38,80 L62,80 L66,77 L66,49 L61,46 L40,46 Z" fill="var(--piece-fill, #4A3728)" stroke="var(--piece-stroke, #F5E6CA)" stroke-width="3" stroke-linejoin="round"/>
+  
+  <!-- Neck/collar -->
+  <rect x="42" y="43" width="16" height="6" fill="var(--piece-fill, #4A3728)" stroke="var(--piece-stroke, #F5E6CA)" stroke-width="2.5" stroke-linejoin="round"/>
+  
+  <!-- Head -->
+  <circle cx="50" cy="37.5" r="8.8" fill="var(--piece-fill, #4A3728)" stroke="var(--piece-stroke, #F5E6CA)" stroke-width="2.8"/>
+  
+  <!-- Pointed helmet cap -->
+  <path d="M42,32.5 L43.5,28 L48,24 L52,23 L57,28 L58.5,32.5 L42,32.5 Z" fill="var(--piece-fill, #4A3728)" stroke="var(--piece-stroke, #F5E6CA)" stroke-width="2.8" stroke-linejoin="round"/>
+  
+  <!-- Helmet spike -->
+  <path d="M50,23 L50,18.5" fill="none" stroke="var(--piece-stroke, #F5E6CA)" stroke-width="2.3" stroke-linecap="round"/>
+
+  <!-- Triple Chevron Mark on body (symbol of 3-stage promotion) -->
+  <!-- Bottom chevron -->
+  <path d="M43,66 L50,58 L57,66" fill="none" stroke="var(--piece-stroke, #F5E6CA)" stroke-width="2.6" stroke-linejoin="round"/>
+  <!-- Middle chevron -->
+  <path d="M44.2,60 L50,53.5 L55.8,60" fill="none" stroke="var(--piece-stroke, #F5E6CA)" stroke-width="2.3" stroke-linejoin="round"/>
+  <!-- Top chevron -->
+  <path d="M45.5,54.5 L50,49 L54.5,54.5" fill="none" stroke="var(--piece-stroke, #F5E6CA)" stroke-width="2" stroke-linejoin="round"/>
+</svg>

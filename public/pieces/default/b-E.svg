@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+  <!-- Wide foundation base -->
+  <rect x="18" y="86.5" width="63" height="9" rx="1" fill="var(--piece-fill, #F5E6CA)" stroke="var(--piece-stroke, #4A3728)" stroke-width="3" stroke-linejoin="round"/>
+  
+  <!-- Stepped second base -->
+  <rect x="24" y="80" width="51" height="7" fill="var(--piece-fill, #F5E6CA)" stroke="var(--piece-stroke, #4A3728)" stroke-width="3" stroke-linejoin="round"/>
+  
+  <!-- Powerful compact body (Persian war elephant silhouette) -->
+  <path d="M29.5,49 L29.5,71 L33,75 L52.5,75 L59,68 L60.5,53 L55,46 L38,44.5 Z" fill="var(--piece-fill, #F5E6CA)" stroke="var(--piece-stroke, #4A3728)" stroke-width="3" stroke-linejoin="round"/>
+  
+  <!-- Head (attached forward) -->
+  <path d="M57,47 L61,44 L68,46 L71,53 L70,61 L64,65 L59,63 Z" fill="var(--piece-fill, #F5E6CA)" stroke="var(--piece-stroke, #4A3728)" stroke-width="3" stroke-linejoin="round"/>
+  
+  <!-- Large ear (distinctive Timurid style, rounded and prominent) -->
+  <path d="M55,45 C51,37 45,35 39.5,39 C36.5,44 37.5,53 41,56 L52,53 Z" fill="var(--piece-fill, #F5E6CA)" stroke="var(--piece-stroke, #4A3728)" stroke-width="3" stroke-linejoin="round"/>
+  
+  <!-- Trunk (curved upward, alert war-elephant pose) -->
+  <path d="M68.5,53 C71,56 73.5,57 74.5,52 C75.5,46 73,42 69.5,40" fill="none" stroke="var(--piece-stroke, #4A3728)" stroke-width="4" stroke-linecap="round"/>
+  
+  <!-- Tusk (long, ivory-style sweep) -->
+  <path d="M67.5,49 L73.5,52 L75.5,57" fill="none" stroke="var(--piece-stroke, #4A3728)" stroke-width="2.8" stroke-linecap="round"/>
+  
+  <!-- Eye (piercing, geometric) -->
+  <circle cx="65.5" cy="50" r="1.7" fill="var(--piece-fill, #4A3728)"/>
+  
+  <!-- Persian harness / decorative strap (Timurid elegance) -->
+  <path d="M34,55 L56.5,54" fill="none" stroke="var(--piece-stroke, #4A3728)" stroke-width="2.5"/>
+</svg>

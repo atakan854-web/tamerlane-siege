@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+  <!-- Wide foundation base -->
+  <rect x="20" y="87" width="60" height="8.5" rx="1" fill="var(--piece-fill, #F5E6CA)" stroke="var(--piece-stroke, #4A3728)" stroke-width="3" stroke-linejoin="round"/>
+  
+  <!-- Stepped second base -->
+  <rect x="26" y="80" width="48" height="7" fill="var(--piece-fill, #F5E6CA)" stroke="var(--piece-stroke, #4A3728)" stroke-width="3" stroke-linejoin="round"/>
+  
+  <!-- Main body robe -->
+  <rect x="37" y="48" width="26" height="33" rx="2" fill="var(--piece-fill, #F5E6CA)" stroke="var(--piece-stroke, #4A3728)" stroke-width="3" stroke-linejoin="round"/>
+  
+  <!-- Upper collar -->
+  <rect x="35" y="44" width="30" height="5" fill="var(--piece-fill, #F5E6CA)" stroke="var(--piece-stroke, #4A3728)" stroke-width="3" stroke-linejoin="round"/>
+  
+  <!-- Turban band -->
+  <rect x="35.5" y="36.5" width="29" height="6" fill="var(--piece-fill, #F5E6CA)" stroke="var(--piece-stroke, #4A3728)" stroke-width="3" stroke-linejoin="round"/>
+  
+  <!-- Dome-shaped headpiece (Persian/Timurid style) -->
+  <path d="M35.5,36.5 C35.5,29 37.5,25 42.5,21 C47,18 53,18 57.5,21 C62.5,25 64.5,29 64.5,36.5 L35.5,36.5 Z" fill="var(--piece-fill, #F5E6CA)" stroke="var(--piece-stroke, #4A3728)" stroke-width="3" stroke-linejoin="round"/>
+  
+  <!-- Orthogonal cross symbol -->
+  <line x1="50" y1="20" x2="50" y2="35.5" stroke="var(--piece-stroke, #4A3728)" stroke-width="3" stroke-linecap="round"/>
+  <line x1="41" y1="27.5" x2="59" y2="27.5" stroke="var(--piece-stroke, #4A3728)" stroke-width="3" stroke-linecap="round"/>
+</svg>
