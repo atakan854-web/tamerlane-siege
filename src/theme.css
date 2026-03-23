@@ -59,8 +59,5 @@
   --highlight-kingswap:     rgba(50,  130, 230, 0.50); /* king-swap candidate        */
 }
 
-/* Dark-piece variant — applied on wrapper for black pieces */
-.piece-dark {
-  --piece-fill:   #4A3728;
-  --piece-stroke: #F5E6CA;
-}
+/* Note: piece SVGs are loaded as <img> and do not inherit CSS variables.
+   Color differentiation is built into the w-*.svg / b-*.svg file content. */

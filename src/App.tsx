@@ -2,29 +2,33 @@
 // TAMERLANE SIEGE — App Root
 // src/App.tsx
 //
-// Screens:  'home' | 'pvp' | 'ai'
+// Screens:  'home' | 'pvp' | 'ai' | 'tutorial'
 //
 // AI is run inline on the main thread via setTimeout — no Worker, no hook.
 // The `window.__aiPending` flag (keyed on halfMoveCount) prevents double-fire.
 // =============================================================================
 
-import { useState, useCallback, useMemo, useEffect } from 'react'
+import { useState, useCallback, useMemo, useEffect, useRef } from 'react'
 import { createNewGame, makeMove, undoMove } from './core/game'
 import { getGameResult }                     from './core/rules'
-import { gameToMoveList }                    from './core/notation'
+import { gameToMoveList, stateToTFEN }       from './core/notation'
 import type { GameState, Move }              from './core/types'
 import { GameBoard }     from './ui/components/GameBoard'
 import { GameControls }  from './ui/components/GameControls'
 import { MoveList }      from './ui/components/MoveList'
 import { GameOverModal } from './ui/components/GameOverModal'
+import { HowToPlay }       from './ui/components/HowToPlay'
+import { TutorialScreen }  from './ui/components/TutorialScreen'
 import { findBestMove }  from './ai/search'
 import { getDifficultyParams, DIFFICULTY_LABELS } from './ai/difficulty'
+import { saveGameLog, getGameStats, resultToWinner, exportGameLogs } from './gameLog'
+import type { GameStats } from './gameLog'
 
 // =============================================================================
 // Types
 // =============================================================================
 
-type Screen = 'home' | 'pvp' | 'ai'
+type Screen = 'home' | 'pvp' | 'ai' | 'tutorial' | 'tutorialPlay'
 
 declare global {
   interface Window {
@@ -44,12 +48,16 @@ const AI_COLOR = 'b' as const
 // =============================================================================
 
 interface HomeScreenProps {
-  onPvP:    () => void
-  onAI:     (difficulty: number) => void
-  initDiff: number
+  onPvP:           () => void
+  onAI:            (difficulty: number) => void
+  onTutorial:      () => void
+  onRulesRef:      () => void
+  initDiff:        number
+  stats:           GameStats
+  onExport:        () => void
 }
 
-function HomeScreen({ onPvP, onAI, initDiff }: HomeScreenProps) {
+function HomeScreen({ onPvP, onAI, onTutorial, onRulesRef, initDiff, stats, onExport }: HomeScreenProps) {
   const [diff, setDiff] = useState(initDiff)
 
   const card: React.CSSProperties = {
@@ -104,6 +112,50 @@ function HomeScreen({ onPvP, onAI, initDiff }: HomeScreenProps) {
           onClick={onPvP}>
           Play vs Human (Local)
         </button>
+        <button style={{ ...btnBase, background: 'var(--surface-tertiary)', color: 'var(--text-primary)', border: '1px solid var(--accent-gold-muted)' }}
+          onClick={onTutorial}>
+          Tutorial (Interactive)
+        </button>
+        <button style={{ ...btnBase, background: 'none', color: 'var(--text-secondary)', border: '1px solid var(--surface-tertiary)' }}
+          onClick={onRulesRef}>
+          Rules Reference
+        </button>
+
+        {/* Game stats — only show if games have been played */}
+        {stats.totalGames > 0 && (
+          <div style={{
+            marginTop:    8,
+            padding:      '10px 16px',
+            borderRadius: 8,
+            background:   'var(--surface-tertiary)',
+            textAlign:    'left',
+          }}>
+            <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--text-muted)', marginBottom: 6 }}>
+              Your Stats
+            </div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, color: 'var(--text-secondary)' }}>
+              <span>Games: <strong style={{ color: 'var(--text-primary)' }}>{stats.totalGames}</strong></span>
+              <span>Wins: <strong style={{ color: 'var(--text-primary)' }}>{stats.wins}</strong></span>
+              <span>Draws: <strong style={{ color: 'var(--text-primary)' }}>{stats.draws}</strong></span>
+            </div>
+            <button
+              onClick={onExport}
+              style={{
+                marginTop:    8,
+                background:   'none',
+                border:       '1px solid var(--surface-tertiary)',
+                borderRadius: 4,
+                color:        'var(--text-muted)',
+                fontSize:     11,
+                padding:      '2px 8px',
+                cursor:       'pointer',
+                width:        '100%',
+              }}
+            >
+              Export Game Data (JSON)
+            </button>
+          </div>
+        )}
       </div>
     </div>
   )
@@ -122,10 +174,11 @@ interface GameScreenProps {
   isThinking: boolean
   isAI:       boolean
   halfMoves:  string[]
+  aiError:    string | null
 }
 
-function GameScreen({ state, onMove, onUndo, onNewGame, onHome, isThinking, isAI, halfMoves }: GameScreenProps) {
-  const result     = getGameResult(state)
+function GameScreen({ state, onMove, onUndo, onNewGame, onHome, isThinking, isAI, halfMoves, aiError }: GameScreenProps) {
+  const result      = getGameResult(state)
   const interactive = !isThinking && result === null && !(isAI && state.turn === AI_COLOR)
 
   let turnLabel: string
@@ -171,6 +224,41 @@ function GameScreen({ state, onMove, onUndo, onNewGame, onHome, isThinking, isAI
             onUndo={onUndo}
             canUndo={state.history.length > 0 && !isThinking}
           />
+
+          {/* AI error banner — shown when AI fails to find or execute a move */}
+          {aiError && (
+            <div style={{
+              marginTop:    10,
+              padding:      '8px 14px',
+              borderRadius: 6,
+              background:   'rgba(200, 40, 40, 0.12)',
+              border:       '1px solid rgba(200, 40, 40, 0.35)',
+              color:        '#FF7070',
+              fontSize:     13,
+              display:      'flex',
+              alignItems:   'center',
+              gap:          8,
+            }}>
+              <span>⚠</span>
+              <span style={{ flex: 1 }}>{aiError}</span>
+              <button
+                onClick={onNewGame}
+                style={{
+                  padding:      '3px 10px',
+                  borderRadius: 4,
+                  border:       '1px solid rgba(200,40,40,0.5)',
+                  background:   'rgba(200,40,40,0.2)',
+                  color:        '#FF7070',
+                  cursor:       'pointer',
+                  fontSize:     12,
+                  fontWeight:   600,
+                  flexShrink:   0,
+                }}
+              >
+                New Game
+              </button>
+            </div>
+          )}
         </div>
 
         {/* Right column — move list (below on mobile, sidebar on desktop) */}
@@ -193,6 +281,12 @@ export default function App() {
   const [state,        setState]        = useState<GameState>(createNewGame)
   const [aiDifficulty, setAiDifficulty] = useState(3)
   const [isThinking,   setIsThinking]   = useState(false)
+  const [aiError,      setAiError]      = useState<string | null>(null)
+  const [stats,        setStats]        = useState<GameStats>(getGameStats)
+
+  // Timing & double-save guards
+  const startTimeRef   = useRef(Date.now())
+  const lastLoggedRef  = useRef<string>('')  // halfMoveCount at which we last logged
 
   // -------------------------------------------------------------------------
   // Move / game management
@@ -205,6 +299,7 @@ export default function App() {
   const handleUndo = useCallback(() => {
     window.__aiPending = -1
     setIsThinking(false)
+    setAiError(null)
     setState(prev => {
       const after1 = undoMove(prev)
       // In AI mode undo two half-moves so it's the human's turn again
@@ -218,18 +313,26 @@ export default function App() {
   const handleNewGame = useCallback(() => {
     window.__aiPending = -1
     setIsThinking(false)
+    setAiError(null)
+    startTimeRef.current = Date.now()
+    lastLoggedRef.current = ''
     setState(createNewGame())
   }, [])
 
   const goHome = useCallback(() => {
     window.__aiPending = -1
     setIsThinking(false)
+    setAiError(null)
+    setStats(getGameStats())    // refresh stats when returning home
     setScreen('home')
   }, [])
 
   const startPvP = useCallback(() => {
     window.__aiPending = -1
     setIsThinking(false)
+    setAiError(null)
+    startTimeRef.current = Date.now()
+    lastLoggedRef.current = ''
     setState(createNewGame())
     setScreen('pvp')
   }, [])
@@ -237,17 +340,37 @@ export default function App() {
   const startAI = useCallback((difficulty: number) => {
     window.__aiPending = -1
     setIsThinking(false)
+    setAiError(null)
     setAiDifficulty(difficulty)
+    startTimeRef.current = Date.now()
+    lastLoggedRef.current = ''
     setState(createNewGame())
     setScreen('ai')
   }, [])
 
+  const goTutorial = useCallback(() => {
+    setScreen('tutorialPlay')
+  }, [])
+
+  const goRulesRef = useCallback(() => {
+    setScreen('tutorial')
+  }, [])
+
+  const handleExport = useCallback(() => {
+    const json = exportGameLogs()
+    // Try clipboard first, then fall back to download
+    if (navigator.clipboard) {
+      navigator.clipboard.writeText(json).then(
+        () => { alert('Game data copied to clipboard!') },
+        () => { downloadJSON(json) },
+      )
+    } else {
+      downloadJSON(json)
+    }
+  }, [])
+
   // -------------------------------------------------------------------------
   // AI trigger — inline, no hook, no worker
-  //
-  // Deps: only primitives that signal "a new position needs AI".
-  // isThinking is NOT a dep — adding it creates a self-referential loop.
-  // window.__aiPending (keyed on halfMoveCount) prevents double-fire.
   // -------------------------------------------------------------------------
 
   useEffect(() => {
@@ -256,14 +379,13 @@ export default function App() {
     if (state.result !== null) return
 
     const key = state.halfMoveCount
-    if (window.__aiPending === key) return   // already fired for this position
+    if (window.__aiPending === key) return
     window.__aiPending = key
 
-    console.log('[AI] Thinking for halfMove', key)
+    if (import.meta.env.DEV) console.log('[AI] Thinking for halfMove', key)
     setIsThinking(true)
 
     setTimeout(() => {
-      // Stale check: if another effect reset the pending flag, bail out
       if (window.__aiPending !== key) {
         setIsThinking(false)
         return
@@ -274,17 +396,18 @@ export default function App() {
         const result = findBestMove(state, params.maxDepth, params.timeLimit)
 
         if (result?.move) {
-          console.log('[AI] Found move:', result.move)
+          if (import.meta.env.DEV) console.log('[AI] Found move:', result.move)
           setState(prev => {
-            // Stale state guard: only apply if the position hasn't changed
             if (prev.halfMoveCount !== key) return prev
             return makeMove(prev, result.move)
           })
         } else {
-          console.error('[AI] No move found')
+          if (import.meta.env.DEV) console.error('[AI] No move found')
+          setAiError('AI hamle bulamadı. Yeni oyun başlatın.')
         }
       } catch (e) {
-        console.error('[AI] Error:', e)
+        if (import.meta.env.DEV) console.error('[AI] Error:', e)
+        setAiError('AI hatası oluştu. Yeni oyun başlatın.')
       }
 
       window.__aiPending = -1
@@ -292,7 +415,41 @@ export default function App() {
     }, 100)
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [state.halfMoveCount, state.turn, screen])
-  //         ^^^ stable primitives only — aiDifficulty is read at fire time
+
+  // -------------------------------------------------------------------------
+  // Game-over logging — save to localStorage when a game ends
+  // -------------------------------------------------------------------------
+
+  useEffect(() => {
+    if (screen !== 'ai' && screen !== 'pvp') return
+    const result = state.result
+    if (result === null) return
+
+    // Prevent double-save for the same game
+    const logKey = `${state.halfMoveCount}-${result}`
+    if (lastLoggedRef.current === logKey) return
+    lastLoggedRef.current = logKey
+
+    const duration = Math.round((Date.now() - startTimeRef.current) / 1000)
+    const moves    = gameToMoveList(state)
+
+    saveGameLog({
+      id:             crypto.randomUUID(),
+      timestamp:      new Date().toISOString(),
+      mode:           screen === 'ai' ? 'ai' : 'pvp',
+      aiDifficulty:   screen === 'ai' ? aiDifficulty : undefined,
+      result,
+      winner:         resultToWinner(result),
+      totalMoves:     state.halfMoveCount,
+      durationSeconds: duration,
+      moves,
+      finalTFEN:      stateToTFEN(state),
+    })
+
+    // Update stats immediately (will also refresh when going home)
+    setStats(getGameStats())
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [state.result, screen])
 
   // -------------------------------------------------------------------------
   // Derived
@@ -300,7 +457,7 @@ export default function App() {
 
   const halfMoves = useMemo(() => gameToMoveList(state), [state])
 
-  // Debug API
+  // Debug API (always available for devtools convenience)
   if (typeof window !== 'undefined') {
     window.e = { state: () => state, undo: handleUndo, reset: handleNewGame }
   }
@@ -310,7 +467,25 @@ export default function App() {
   // -------------------------------------------------------------------------
 
   if (screen === 'home') {
-    return <HomeScreen onPvP={startPvP} onAI={startAI} initDiff={aiDifficulty} />
+    return (
+      <HomeScreen
+        onPvP={startPvP}
+        onAI={startAI}
+        onTutorial={goTutorial}
+        onRulesRef={goRulesRef}
+        initDiff={aiDifficulty}
+        stats={stats}
+        onExport={handleExport}
+      />
+    )
+  }
+
+  if (screen === 'tutorial') {
+    return <HowToPlay onBack={() => setScreen('home')} />
+  }
+
+  if (screen === 'tutorialPlay') {
+    return <TutorialScreen onBack={() => setScreen('home')} />
   }
 
   return (
@@ -323,6 +498,21 @@ export default function App() {
       isThinking={isThinking}
       isAI={screen === 'ai'}
       halfMoves={halfMoves}
+      aiError={aiError}
     />
   )
+}
+
+// =============================================================================
+// Helper — download JSON as a file
+// =============================================================================
+
+function downloadJSON(json: string) {
+  const blob = new Blob([json], { type: 'application/json' })
+  const url  = URL.createObjectURL(blob)
+  const a    = document.createElement('a')
+  a.href     = url
+  a.download = `tamerlane-games-${new Date().toISOString().slice(0, 10)}.json`
+  a.click()
+  URL.revokeObjectURL(url)
 }

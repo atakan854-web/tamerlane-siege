@@ -67,15 +67,17 @@ const engineAPI = {
 
 ;(window as any).e = engineAPI
 
-console.log('%c♛ Tamerlane Siege Engine Console ♛', 'font-size: 16px; font-weight: bold; color: #D4AF37')
-console.log('%cKomutlar:', 'font-weight: bold')
-console.log('  e.board()    — Board görüntüle')
-console.log('  e.moves()    — Legal moves listesi')
-console.log('  e.play(0)    — Index ile move yap')
-console.log('  e.piece(5,1) — Karedeki piece moves')
-console.log('  e.history()  — Move history')
-console.log('  e.undo()     — Son move geri al')
-console.log('  e.reset()    — Yeni oyun')
+if (import.meta.env.DEV) {
+  console.log('%c♛ Tamerlane Siege Engine Console ♛', 'font-size: 16px; font-weight: bold; color: #D4AF37')
+  console.log('%cKomutlar:', 'font-weight: bold')
+  console.log('  e.board()    — Board görüntüle')
+  console.log('  e.moves()    — Legal moves listesi')
+  console.log('  e.play(0)    — Index ile move yap')
+  console.log('  e.piece(5,1) — Karedeki piece moves')
+  console.log('  e.history()  — Move history')
+  console.log('  e.undo()     — Son move geri al')
+  console.log('  e.reset()    — Yeni oyun')
+}
 
 const rootElement = document.getElementById('root')
 if (!rootElement) throw new Error('Root element not found')

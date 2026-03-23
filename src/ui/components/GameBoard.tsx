@@ -8,7 +8,7 @@
 // App.tsx owns GameState and passes onMove / onUndo / onNewGame callbacks.
 // =============================================================================
 
-import { useRef, useState, useMemo, useLayoutEffect } from 'react'
+import { useRef, useState, useMemo, useLayoutEffect, useEffect } from 'react'
 import type { GameState, Square, Move, Piece } from '../../core/types'
 import { MoveFlag, PieceType } from '../../core/types'
 import { getAllLegalMoves, isRoyalInCheck } from '../../core/rules'
@@ -17,7 +17,7 @@ import { Board, squareToPx, type BoardHighlights } from './Board'
 import { PieceComponent } from './Piece'
 
 // -----------------------------------------------------------------------------
-// Helper — pretty piece-type name for modals
+// Helper — pretty piece-type name for modals / toasts
 // -----------------------------------------------------------------------------
 
 const PIECE_DISPLAY_NAMES: Record<PieceType, string> = {
@@ -51,15 +51,14 @@ function pieceName(t: PieceType): string {
 }
 
 // -----------------------------------------------------------------------------
-// Modal type
+// Types
 // -----------------------------------------------------------------------------
 
-type ModalKind =
-  | { kind: 'promotion';    move: Move }   // normal pawn promotion info
-  | { kind: 'pp-stage1';   move: Move }   // PP arrives on back rank (stage 1)
-  | { kind: 'pp-stage2';   move: Move }   // PP arrives second time
-  | { kind: 'pp-stage3';   move: Move }   // PP → Adventitious King
-  | { kind: 'displacement'; move: Move }  // PP teleport displacing a friendly piece
+// Blocking modal — requires explicit user confirmation before proceeding
+type ModalKind = { kind: 'displacement'; move: Move }
+
+// Non-blocking toast — shown for 2 s then auto-dismissed; move executes immediately
+interface ToastInfo { title: string; body: string }
 
 // -----------------------------------------------------------------------------
 // Props
@@ -83,10 +82,18 @@ export function GameBoard({ state, onMove, className, style }: GameBoardProps) {
   const [boardWidth, setBoardWidth] = useState(0)
 
   // Interaction state
-  const [selected,    setSelected]    = useState<Square | null>(null)
-  const [legalMoves,  setLegalMoves]  = useState<Move[]>([])
-  const [lastMove,    setLastMove]    = useState<Move | null>(null)
-  const [modal,       setModal]       = useState<ModalKind | null>(null)
+  const [selected,   setSelected]   = useState<Square | null>(null)
+  const [legalMoves, setLegalMoves] = useState<Move[]>([])
+  const [lastMove,   setLastMove]   = useState<Move | null>(null)
+  const [modal,      setModal]      = useState<ModalKind | null>(null)
+  const [toast,      setToast]      = useState<ToastInfo | null>(null)
+
+  // Auto-dismiss toast after 2 seconds
+  useEffect(() => {
+    if (!toast) return
+    const id = setTimeout(() => setToast(null), 2000)
+    return () => clearTimeout(id)
+  }, [toast])
 
   // Measure board width (for pixel-accurate piece positioning)
   useLayoutEffect(() => {
@@ -112,6 +119,16 @@ export function GameBoard({ state, onMove, className, style }: GameBoardProps) {
     return royals.filter(sq => isRoyalInCheck(sq, state.turn, state))
   }, [state])
 
+  // Piece entries — memoized to avoid Map→Array conversion on every render
+  const pieceEntries = useMemo<Array<{ key: string; file: number; rank: number; piece: Piece }>>(() => {
+    const entries: Array<{ key: string; file: number; rank: number; piece: Piece }> = []
+    for (const [key, piece] of state.pieces.entries()) {
+      const [f, r] = key.split(',').map(Number)
+      entries.push({ key, file: f, rank: r, piece })
+    }
+    return entries
+  }, [state.pieces])
+
   // -------------------------------------------------------------------------
   // Categorise legal moves for the selected piece into highlight buckets
   // -------------------------------------------------------------------------
@@ -135,7 +152,7 @@ export function GameBoard({ state, onMove, className, style }: GameBoardProps) {
   }
 
   // -------------------------------------------------------------------------
-  // Execute move (called after any required modal confirmation)
+  // Execute move (called immediately for normal moves; after confirmation for displacement)
   // -------------------------------------------------------------------------
 
   function executeMove(move: Move) {
@@ -147,22 +164,43 @@ export function GameBoard({ state, onMove, className, style }: GameBoardProps) {
   }
 
   // -------------------------------------------------------------------------
-  // Determine whether a move requires a modal
+  // Returns a blocking modal if the move requires explicit user confirmation.
+  // Currently only PP teleport with displacement needs confirmation.
   // -------------------------------------------------------------------------
 
-  function modalForMove(move: Move): ModalKind | null {
+  function blockingModalForMove(move: Move): ModalKind | null {
+    if (move.flag === MoveFlag.PAWN_OF_PAWNS_TELEPORT && move.displaced) {
+      return { kind: 'displacement', move }
+    }
+    return null
+  }
+
+  // -------------------------------------------------------------------------
+  // Returns a brief informational toast for notable move events.
+  // The move executes immediately — the toast is purely informational.
+  // -------------------------------------------------------------------------
+
+  function toastForMove(move: Move): ToastInfo | null {
     switch (move.flag) {
-      case MoveFlag.PROMOTION:
-        return { kind: 'promotion', move }
+      case MoveFlag.PROMOTION: {
+        const promoted = move.promotionType ? pieceName(move.promotionType) : 'piece'
+        return { title: 'Pawn Promotion', body: `Promotes to ${promoted}!` }
+      }
       case MoveFlag.PAWN_OF_PAWNS_STAGE1_ARRIVAL:
-        return { kind: 'pp-stage1', move }
+        return {
+          title: 'Pawn of Pawns — Stage 1',
+          body:  'Reached the back rank! Now Immobile & Invincible. Teleport it on your next turn.',
+        }
       case MoveFlag.PAWN_OF_PAWNS_STAGE2_ARRIVAL:
-        return { kind: 'pp-stage2', move }
+        return {
+          title: 'Pawn of Pawns — Stage 2',
+          body:  `Relocates to the ${pieceName(PieceType.PAWN_OF_KINGS)} starting square.`,
+        }
       case MoveFlag.PAWN_OF_PAWNS_STAGE3_PROMOTION:
-        return { kind: 'pp-stage3', move }
-      case MoveFlag.PAWN_OF_PAWNS_TELEPORT:
-        // Only need confirmation if a friendly piece is displaced
-        return move.displaced ? { kind: 'displacement', move } : null
+        return {
+          title: 'Pawn of Pawns — Stage 3',
+          body:  'Journey complete — promotes to Adventitious King!',
+        }
       default:
         return null
     }
@@ -193,12 +231,11 @@ export function GameBoard({ state, onMove, className, style }: GameBoardProps) {
     // Game over — ignore all clicks
     if (state.result !== null) return
 
-    // Modal is open — ignore board clicks
+    // Blocking modal is open — ignore board clicks
     if (modal !== null) return
 
     // If a piece is selected, check if we're clicking a legal target
     if (selected !== null) {
-      // Find the move(s) that land on this square
       const candidates = legalMoves.filter(
         m => m.to.file === sq.file && m.to.rank === sq.rank,
       )
@@ -206,10 +243,14 @@ export function GameBoard({ state, onMove, className, style }: GameBoardProps) {
       if (candidates.length > 0) {
         // There should be at most one candidate per destination for Tamerlane
         const move = candidates[0]
-        const m = modalForMove(move)
-        if (m) {
-          setModal(m)
+        const blocking = blockingModalForMove(move)
+        if (blocking) {
+          // Needs confirmation — show blocking modal
+          setModal(blocking)
         } else {
+          // Execute immediately; show informational toast if applicable
+          const info = toastForMove(move)
+          if (info) setToast(info)
           executeMove(move)
         }
         return
@@ -248,16 +289,6 @@ export function GameBoard({ state, onMove, className, style }: GameBoardProps) {
   }
 
   // -------------------------------------------------------------------------
-  // Piece entries to render
-  // -------------------------------------------------------------------------
-
-  const pieceEntries: Array<{ key: string; file: number; rank: number; piece: Piece }> = []
-  for (const [key, piece] of state.pieces.entries()) {
-    const [f, r] = key.split(',').map(Number)
-    pieceEntries.push({ key, file: f, rank: r, piece })
-  }
-
-  // -------------------------------------------------------------------------
   // Render
   // -------------------------------------------------------------------------
 
@@ -277,8 +308,8 @@ export function GameBoard({ state, onMove, className, style }: GameBoardProps) {
         {/* Piece overlays */}
         {boardWidth > 0 && pieceEntries.map(({ key, file, rank, piece }) => {
           const { left, top, size } = squareToPx(file, rank, boardWidth)
-          const isSel = selected?.file === file && selected?.rank === rank
-          const isCheck = checkSquares.some(s => s.file === file && s.rank === rank)
+          const isSel    = selected?.file === file && selected?.rank === rank
+          const isCheck  = checkSquares.some(s => s.file === file && s.rank === rank)
           return (
             <PieceComponent
               key={key}
@@ -295,24 +326,37 @@ export function GameBoard({ state, onMove, className, style }: GameBoardProps) {
       </div>
 
       {/* ------------------------------------------------------------------ */}
-      {/* Modals                                                               */}
+      {/* Blocking modal (displacement confirmation only)                      */}
       {/* ------------------------------------------------------------------ */}
-      {modal && <ModalOverlay modal={modal} onConfirm={executeMove} onCancel={() => setModal(null)} />}
+      {modal && (
+        <DisplacementModal
+          move={modal.move}
+          onConfirm={executeMove}
+          onCancel={() => setModal(null)}
+        />
+      )}
+
+      {/* ------------------------------------------------------------------ */}
+      {/* Informational toast (auto-dismisses after 2 s)                      */}
+      {/* ------------------------------------------------------------------ */}
+      {toast && <InfoToast toast={toast} />}
     </>
   )
 }
 
 // =============================================================================
-// ModalOverlay — renders whichever modal is active
+// DisplacementModal — blocking confirmation for PP teleport with displacement
 // =============================================================================
 
-interface ModalOverlayProps {
-  modal:     ModalKind
+interface DisplacementModalProps {
+  move:      Move
   onConfirm: (move: Move) => void
   onCancel:  () => void
 }
 
-function ModalOverlay({ modal, onConfirm, onCancel }: ModalOverlayProps) {
+function DisplacementModal({ move, onConfirm, onCancel }: DisplacementModalProps) {
+  const displaced = move.displaced ? pieceName(move.displaced.type) : 'piece'
+
   const backdropStyle: React.CSSProperties = {
     position:        'fixed',
     inset:           0,
@@ -324,96 +368,84 @@ function ModalOverlay({ modal, onConfirm, onCancel }: ModalOverlayProps) {
   }
 
   const boxStyle: React.CSSProperties = {
-    background:    'var(--surface-secondary)',
-    border:        '1px solid var(--accent-gold-muted)',
-    borderRadius:  12,
-    padding:       '28px 36px',
-    maxWidth:      400,
-    width:         '90%',
-    textAlign:     'center',
-    color:         'var(--text-primary)',
-    boxShadow:     '0 8px 32px rgba(0,0,0,0.6)',
+    background:   'var(--surface-secondary)',
+    border:       '1px solid var(--accent-gold-muted)',
+    borderRadius: 12,
+    padding:      '28px 36px',
+    maxWidth:     400,
+    width:        '90%',
+    textAlign:    'center',
+    color:        'var(--text-primary)',
+    boxShadow:    '0 8px 32px rgba(0,0,0,0.6)',
   }
 
   const btnBase: React.CSSProperties = {
-    padding:       '8px 22px',
-    borderRadius:  6,
-    border:        'none',
-    cursor:        'pointer',
-    fontWeight:    600,
-    fontSize:      15,
-    margin:        '0 6px',
-  }
-
-  const btnPrimary: React.CSSProperties = {
-    ...btnBase,
-    background: 'var(--btn-primary-bg)',
-    color:      'var(--btn-primary-text)',
-  }
-
-  const btnSecondary: React.CSSProperties = {
-    ...btnBase,
-    background: 'var(--btn-secondary-bg)',
-    color:      'var(--btn-secondary-text)',
-  }
-
-  let title    = ''
-  let body     = ''
-  let showCancel = false
-
-  switch (modal.kind) {
-    case 'promotion': {
-      const promoted = modal.move.promotionType
-        ? pieceName(modal.move.promotionType)
-        : 'piece'
-      title = 'Pawn Promotion'
-      body  = `This pawn promotes to ${promoted}!`
-      break
-    }
-    case 'pp-stage1': {
-      title = 'Pawn of Pawns — Stage 1'
-      body  = 'The Pawn of Pawns has reached the back rank! It is now Immobile & Invincible. On your next turn, you may teleport it to any square it attacks or forks.'
-      break
-    }
-    case 'pp-stage2': {
-      const promoted = pieceName(PieceType.PAWN_OF_KINGS)
-      title = 'Pawn of Pawns — Stage 2'
-      body  = `The Pawn of Pawns reaches the back rank again and relocates to the ${promoted} starting square.`
-      break
-    }
-    case 'pp-stage3': {
-      title = 'Pawn of Pawns — Stage 3'
-      body  = 'The Pawn of Pawns has completed its journey and promotes to the Adventitious King!'
-      break
-    }
-    case 'displacement': {
-      const displaced = modal.move.displaced
-        ? pieceName(modal.move.displaced.type)
-        : 'piece'
-      title      = 'Displace Friendly Piece?'
-      body       = `Teleporting here will displace your ${displaced}. It will be removed from the board.`
-      showCancel = true
-      break
-    }
+    padding:      '8px 22px',
+    borderRadius: 6,
+    border:       'none',
+    cursor:       'pointer',
+    fontWeight:   600,
+    fontSize:     15,
+    margin:       '0 6px',
   }
 
   return (
     <div style={backdropStyle} onClick={onCancel}>
       <div style={boxStyle} onClick={e => e.stopPropagation()}>
         <h2 style={{ margin: '0 0 12px', fontSize: 20, color: 'var(--accent-gold)' }}>
-          {title}
+          Displace Friendly Piece?
         </h2>
         <p style={{ margin: '0 0 24px', lineHeight: 1.5, color: 'var(--text-secondary)' }}>
-          {body}
+          Teleporting here will displace your {displaced}. It will be removed from the board.
         </p>
         <div>
-          {showCancel && (
-            <button style={btnSecondary} onClick={onCancel}>Cancel</button>
-          )}
-          <button style={btnPrimary} onClick={() => onConfirm(modal.move)}>
-            {modal.kind === 'displacement' ? 'Confirm' : 'OK'}
+          <button
+            style={{ ...btnBase, background: 'var(--btn-secondary-bg)', color: 'var(--btn-secondary-text)' }}
+            onClick={onCancel}
+          >
+            Cancel
+          </button>
+          <button
+            style={{ ...btnBase, background: 'var(--btn-primary-bg)', color: 'var(--btn-primary-text)' }}
+            onClick={() => onConfirm(move)}
+          >
+            Confirm
           </button>
         </div>
+      </div>
+    </div>
+  )
+}
+
+// =============================================================================
+// InfoToast — non-blocking 2 s notification for promotion / PP stage events
+// =============================================================================
+
+function InfoToast({ toast }: { toast: ToastInfo }) {
+  return (
+    <div
+      style={{
+        position:     'fixed',
+        bottom:       32,
+        left:         '50%',
+        transform:    'translateX(-50%)',
+        background:   'var(--surface-secondary)',
+        border:       '1px solid var(--accent-gold-muted)',
+        borderRadius: 10,
+        padding:      '12px 22px',
+        boxShadow:    '0 4px 24px rgba(0,0,0,0.55)',
+        zIndex:       150,
+        minWidth:     200,
+        maxWidth:     340,
+        textAlign:    'center',
+        pointerEvents: 'none',  // never blocks board interaction
+      }}
+    >
+      <div style={{ fontWeight: 700, fontSize: 14, color: 'var(--accent-gold)', marginBottom: 4 }}>
+        {toast.title}
+      </div>
+      <div style={{ fontSize: 13, color: 'var(--text-secondary)', lineHeight: 1.4 }}>
+        {toast.body}
       </div>
     </div>
   )
