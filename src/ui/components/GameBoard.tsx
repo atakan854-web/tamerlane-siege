@@ -57,7 +57,7 @@ function pieceName(t: PieceType): string {
 // Blocking modal — requires explicit user confirmation before proceeding
 type ModalKind = { kind: 'displacement'; move: Move }
 
-// Non-blocking toast — shown for 2 s then auto-dismissed; move executes immediately
+// Non-blocking toast — shown for 3 s then auto-dismissed; move executes immediately
 interface ToastInfo { title: string; body: string }
 
 // -----------------------------------------------------------------------------
@@ -91,7 +91,7 @@ export function GameBoard({ state, onMove, className, style }: GameBoardProps) {
   // Auto-dismiss toast after 2 seconds
   useEffect(() => {
     if (!toast) return
-    const id = setTimeout(() => setToast(null), 2000)
+    const id = setTimeout(() => setToast(null), 3000)
     return () => clearTimeout(id)
   }, [toast])
 
@@ -337,7 +337,7 @@ export function GameBoard({ state, onMove, className, style }: GameBoardProps) {
       )}
 
       {/* ------------------------------------------------------------------ */}
-      {/* Informational toast (auto-dismisses after 2 s)                      */}
+      {/* Informational toast (auto-dismisses after 3 s)                      */}
       {/* ------------------------------------------------------------------ */}
       {toast && <InfoToast toast={toast} />}
     </>
@@ -355,6 +355,13 @@ interface DisplacementModalProps {
 }
 
 function DisplacementModal({ move, onConfirm, onCancel }: DisplacementModalProps) {
+  // Dismiss on Escape key
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => { if (e.key === 'Escape') onCancel() }
+    window.addEventListener('keydown', handler)
+    return () => window.removeEventListener('keydown', handler)
+  }, [onCancel])
+
   const displaced = move.displaced ? pieceName(move.displaced.type) : 'piece'
 
   const backdropStyle: React.CSSProperties = {
@@ -418,7 +425,7 @@ function DisplacementModal({ move, onConfirm, onCancel }: DisplacementModalProps
 }
 
 // =============================================================================
-// InfoToast — non-blocking 2 s notification for promotion / PP stage events
+// InfoToast — non-blocking 3 s notification for promotion / PP stage events
 // =============================================================================
 
 function InfoToast({ toast }: { toast: ToastInfo }) {

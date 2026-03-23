@@ -38,7 +38,7 @@ export function MoveList({ halfMoves }: MoveListProps) {
     overflowY:     'auto',
     maxHeight:     '100%',
     fontFamily:    'monospace',
-    fontSize:      13,
+    fontSize:      14,
     color:         'var(--text-primary)',
   }
 

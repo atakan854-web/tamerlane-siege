@@ -292,7 +292,7 @@ export function Board({
           key={`fl-${file}`}
           x={VB_BOARD_X + file * VB_SQ + HALF}
           y={VB_BOARD_Y + RANKS * VB_SQ + 40}
-          textAnchor="middle" fontSize={28}
+          textAnchor="middle" fontSize={30}
           fill="var(--text-secondary)"
           style={{ pointerEvents: 'none' }}
         >
@@ -311,7 +311,7 @@ export function Board({
             key={`rl-${rank}`}
             x={VB_BOARD_X - 15}
             y={y + HALF + 10}
-            textAnchor="end" fontSize={26}
+            textAnchor="end" fontSize={30}
             fill="var(--text-secondary)"
             style={{ pointerEvents: 'none' }}
           >

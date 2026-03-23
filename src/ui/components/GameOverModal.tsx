@@ -3,6 +3,7 @@
 // src/ui/components/GameOverModal.tsx
 // =============================================================================
 
+import { useEffect } from 'react'
 import { GameResult } from '../../core/types'
 
 interface GameOverModalProps {
@@ -19,6 +20,13 @@ const RESULT_MESSAGES: Record<GameResult, { headline: string; sub: string }> = {
 }
 
 export function GameOverModal({ result, onNewGame }: GameOverModalProps) {
+  // Dismiss on Escape key
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => { if (e.key === 'Escape') onNewGame() }
+    window.addEventListener('keydown', handler)
+    return () => window.removeEventListener('keydown', handler)
+  }, [onNewGame])
+
   const { headline, sub } = RESULT_MESSAGES[result]
 
   const backdropStyle: React.CSSProperties = {

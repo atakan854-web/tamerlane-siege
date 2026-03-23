@@ -11,9 +11,9 @@ export interface DifficultyParams {
 
 // Level → parameters table
 const DIFFICULTY_TABLE: Record<number, DifficultyParams> = {
-  1:  { maxDepth: 1, timeLimit:  500, randomness: 200 },
-  2:  { maxDepth: 1, timeLimit:  500, randomness: 150 },
-  3:  { maxDepth: 2, timeLimit: 1000, randomness: 100 },
+  1:  { maxDepth: 1, timeLimit:  500, randomness: 400 },
+  2:  { maxDepth: 1, timeLimit:  500, randomness: 300 },
+  3:  { maxDepth: 2, timeLimit: 1000, randomness: 200 },
   4:  { maxDepth: 2, timeLimit: 1000, randomness:  50 },
   5:  { maxDepth: 3, timeLimit: 1500, randomness:  30 },
   6:  { maxDepth: 3, timeLimit: 1500, randomness:  15 },
@@ -38,14 +38,14 @@ export function addRandomness(score: number, randomness: number): number {
 
 /** Human-readable label for each difficulty level. */
 export const DIFFICULTY_LABELS: Record<number, string> = {
-  1:  'Başlangıç',
-  2:  'Kolay',
-  3:  'Kolay+',
-  4:  'Orta−',
-  5:  'Orta',
-  6:  'Orta+',
-  7:  'Zor−',
-  8:  'Zor',
-  9:  'Uzman',
-  10: 'Uzman+',
+  1:  'Beginner',
+  2:  'Easy',
+  3:  'Easy+',
+  4:  'Medium−',
+  5:  'Medium',
+  6:  'Medium+',
+  7:  'Hard−',
+  8:  'Hard',
+  9:  'Expert',
+  10: 'Expert+',
 }
