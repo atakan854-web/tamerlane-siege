@@ -1,76 +1,67 @@
 // =============================================================================
-// TAMERLANE SIEGE — useAI React Hook
+// TAMERLANE SIEGE — useAI React Hook (Web Worker-based)
 // src/ui/hooks/useAI.ts
 //
-// IMPLEMENTATION NOTE:
-//   Uses setTimeout on the main thread instead of a Web Worker.
-//   The UI freezes briefly at depth 3+ but the logic is simple and reliable.
-//   Swap back to a Worker once the bundler config is confirmed stable.
-//
-// Provides:
-//   isThinking   — true while the engine is computing
-//   makeAIMove   — run search, returns Promise<Move>
-//   cancelSearch — abort any pending computation
+// Runs the AI search in a dedicated Web Worker so the main thread stays
+// responsive during deep searches.
 // =============================================================================
 
 import { useRef, useState, useCallback } from 'react'
 import type { GameState, Move } from '../../core/types'
-import { findBestMove }         from '../../ai/search'
-import { getDifficultyParams, addRandomness } from '../../ai/difficulty'
+import { stateToTFEN } from '../../core/notation'
+import { getAIWorker } from '../../ai/aiWorkerInstance'
+import type { WorkerOutMessage, WorkerErrorMessage } from '../../ai/worker'
 
 export function useAI() {
   const [isThinking, setIsThinking] = useState(false)
 
-  // True while a search is in flight — outlives effect cleanups
-  const pendingRef   = useRef(false)
-  // Set to true to abort the in-flight search
-  const cancelledRef = useRef(false)
+  // Holds resolve/reject for the in-flight Promise; null when idle or cancelled
+  const callbackRef = useRef<{
+    resolve: (move: Move) => void
+    reject: (err: Error) => void
+  } | null>(null)
 
   const cancelSearch = useCallback(() => {
-    cancelledRef.current = true
-    pendingRef.current   = false
+    callbackRef.current = null
     setIsThinking(false)
   }, [])
 
   const makeAIMove = useCallback(
     (state: GameState, difficulty: number): Promise<Move> => {
-      // Cancel any previous search
-      cancelledRef.current = true
+      // Cancel any previous in-flight search
+      callbackRef.current = null
 
       return new Promise<Move>((resolve, reject) => {
-        cancelledRef.current = false
-        pendingRef.current   = true
         setIsThinking(true)
+        callbackRef.current = { resolve, reject }
 
-        // Let React render the "thinking" indicator before freezing
-        setTimeout(() => {
-          if (cancelledRef.current) {
-            pendingRef.current = false
-            reject(new Error('Cancelled'))
-            return
-          }
-          try {
-            const params = getDifficultyParams(difficulty)
-            const result = findBestMove(state, params.maxDepth, params.timeLimit)
-            // Apply cosmetic noise (doesn't affect the chosen move, only the
-            // reported eval value — not currently displayed, but kept for future)
-            addRandomness(result.eval, params.randomness)
+        const worker = getAIWorker()
 
-            pendingRef.current   = false
-            cancelledRef.current = false
-            setIsThinking(false)
-            resolve(result.move)
-          } catch (err) {
-            pendingRef.current   = false
-            cancelledRef.current = false
-            setIsThinking(false)
-            reject(err instanceof Error ? err : new Error(String(err)))
+        worker.onmessage = (e: MessageEvent<WorkerOutMessage | WorkerErrorMessage>) => {
+          if (!callbackRef.current) return // cancelled
+
+          if ('error' in e.data) {
+            callbackRef.current.reject(new Error(e.data.error))
+          } else {
+            callbackRef.current.resolve(e.data.bestMove)
           }
-        }, 30) // 30 ms — enough time for React to flush the render
+          callbackRef.current = null
+          setIsThinking(false)
+        }
+
+        worker.onerror = (err) => {
+          if (!callbackRef.current) return
+          callbackRef.current.reject(new Error(err.message))
+          callbackRef.current = null
+          setIsThinking(false)
+        }
+
+        const tfen = stateToTFEN(state)
+        worker.postMessage({ command: 'search', tfen, difficulty })
       })
     },
     [],
   )
 
-  return { isThinking, makeAIMove, cancelSearch, pendingRef }
+  return { isThinking, makeAIMove, cancelSearch }
 }

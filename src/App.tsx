@@ -2,10 +2,9 @@
 // TAMERLANE SIEGE — App Root
 // src/App.tsx
 //
-// Screens:  'home' | 'pvp' | 'ai' | 'tutorial'
+// Screens:  'home' | 'pvp' | 'ai' | 'tutorial' | 'tutorialPlay'
 //
-// AI is run inline on the main thread via setTimeout — no Worker, no hook.
-// The `window.__aiPending` flag (keyed on halfMoveCount) prevents double-fire.
+// AI search runs in a Web Worker via useAI hook — no main-thread blocking.
 // =============================================================================
 
 import { useState, useCallback, useMemo, useEffect, useRef } from 'react'
@@ -19,8 +18,8 @@ import { MoveList }      from './ui/components/MoveList'
 import { GameOverModal } from './ui/components/GameOverModal'
 import { HowToPlay }       from './ui/components/HowToPlay'
 import { TutorialScreen }  from './ui/components/TutorialScreen'
-import { findBestMove }  from './ai/search'
-import { getDifficultyParams, DIFFICULTY_LABELS } from './ai/difficulty'
+import { useAI }         from './ui/hooks/useAI'
+import { DIFFICULTY_LABELS } from './ai/difficulty'
 import { saveGameLog, getGameStats, resultToWinner, exportGameLogs } from './gameLog'
 import type { GameStats } from './gameLog'
 
@@ -32,13 +31,9 @@ type Screen = 'home' | 'pvp' | 'ai' | 'tutorial' | 'tutorialPlay'
 
 declare global {
   interface Window {
-    e:           { state: () => GameState; undo: () => void; reset: () => void }
-    __aiPending: number   // halfMoveCount of the in-flight AI search (-1 = idle)
+    e: { state: () => GameState; undo: () => void; reset: () => void }
   }
 }
-
-// Initialise sentinel so the first check never false-matches
-if (typeof window !== 'undefined') window.__aiPending = -1
 
 // AI always plays Black in this implementation
 const AI_COLOR = 'b' as const
@@ -280,9 +275,10 @@ export default function App() {
   const [screen,       setScreen]       = useState<Screen>('home')
   const [state,        setState]        = useState<GameState>(createNewGame)
   const [aiDifficulty, setAiDifficulty] = useState(3)
-  const [isThinking,   setIsThinking]   = useState(false)
   const [aiError,      setAiError]      = useState<string | null>(null)
   const [stats,        setStats]        = useState<GameStats>(getGameStats)
+
+  const { isThinking, makeAIMove, cancelSearch } = useAI()
 
   // Timing & double-save guards
   const startTimeRef   = useRef(Date.now())
@@ -297,8 +293,7 @@ export default function App() {
   }, [])
 
   const handleUndo = useCallback(() => {
-    window.__aiPending = -1
-    setIsThinking(false)
+    cancelSearch()
     setAiError(null)
     setState(prev => {
       const after1 = undoMove(prev)
@@ -308,45 +303,41 @@ export default function App() {
       }
       return after1
     })
-  }, [screen])
+  }, [screen, cancelSearch])
 
   const handleNewGame = useCallback(() => {
-    window.__aiPending = -1
-    setIsThinking(false)
+    cancelSearch()
     setAiError(null)
     startTimeRef.current = Date.now()
     lastLoggedRef.current = ''
     setState(createNewGame())
-  }, [])
+  }, [cancelSearch])
 
   const goHome = useCallback(() => {
-    window.__aiPending = -1
-    setIsThinking(false)
+    cancelSearch()
     setAiError(null)
     setStats(getGameStats())    // refresh stats when returning home
     setScreen('home')
-  }, [])
+  }, [cancelSearch])
 
   const startPvP = useCallback(() => {
-    window.__aiPending = -1
-    setIsThinking(false)
+    cancelSearch()
     setAiError(null)
     startTimeRef.current = Date.now()
     lastLoggedRef.current = ''
     setState(createNewGame())
     setScreen('pvp')
-  }, [])
+  }, [cancelSearch])
 
   const startAI = useCallback((difficulty: number) => {
-    window.__aiPending = -1
-    setIsThinking(false)
+    cancelSearch()
     setAiError(null)
     setAiDifficulty(difficulty)
     startTimeRef.current = Date.now()
     lastLoggedRef.current = ''
     setState(createNewGame())
     setScreen('ai')
-  }, [])
+  }, [cancelSearch])
 
   const goTutorial = useCallback(() => {
     setScreen('tutorialPlay')
@@ -370,7 +361,7 @@ export default function App() {
   }, [])
 
   // -------------------------------------------------------------------------
-  // AI trigger — inline, no hook, no worker
+  // AI trigger — Web Worker via useAI hook
   // -------------------------------------------------------------------------
 
   useEffect(() => {
@@ -378,41 +369,21 @@ export default function App() {
     if (state.turn !== AI_COLOR) return
     if (state.result !== null) return
 
-    const key = state.halfMoveCount
-    if (window.__aiPending === key) return
-    window.__aiPending = key
-
-    if (import.meta.env.DEV) console.log('[AI] Thinking for halfMove', key)
-    setIsThinking(true)
-
-    setTimeout(() => {
-      if (window.__aiPending !== key) {
-        setIsThinking(false)
-        return
-      }
-
-      try {
-        const params = getDifficultyParams(aiDifficulty)
-        const result = findBestMove(state, params.maxDepth, params.timeLimit)
-
-        if (result?.move) {
-          if (import.meta.env.DEV) console.log('[AI] Found move:', result.move)
-          setState(prev => {
-            if (prev.halfMoveCount !== key) return prev
-            return makeMove(prev, result.move)
-          })
-        } else {
-          if (import.meta.env.DEV) console.error('[AI] No move found')
-          setAiError('AI hamle bulamadı. Yeni oyun başlatın.')
+    makeAIMove(state, aiDifficulty)
+      .then(move => {
+        setState(prev => {
+          if (prev.turn !== AI_COLOR || prev.result !== null) return prev
+          return makeMove(prev, move)
+        })
+      })
+      .catch(err => {
+        if (import.meta.env.DEV) console.error('[AI Worker]', err)
+        if ((err as Error).message !== 'Cancelled') {
+          setAiError('AI error — please start a new game.')
         }
-      } catch (e) {
-        if (import.meta.env.DEV) console.error('[AI] Error:', e)
-        setAiError('AI hatası oluştu. Yeni oyun başlatın.')
-      }
+      })
 
-      window.__aiPending = -1
-      setIsThinking(false)
-    }, 100)
+    return () => cancelSearch()
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [state.halfMoveCount, state.turn, screen])
 

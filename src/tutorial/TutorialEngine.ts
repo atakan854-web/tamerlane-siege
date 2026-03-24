@@ -7,7 +7,7 @@
 // but intercepts Black's turn based on the lesson's blackBehavior setting.
 // =============================================================================
 
-import type { GameState, Move } from '../core/types'
+import { type GameState, type Move, GameResult, PawnOfPawnsStage } from '../core/types'
 import { tFENtoState } from '../core/notation'
 import { makeMove } from '../core/game'
 import { getAllLegalMoves } from '../core/rules'
@@ -154,6 +154,14 @@ function checkWinCondition(
 
     case 'movesComplete':
       return moveCount >= condition.count
+
+    case 'citadelEntry':
+      // White highest royal entered Black citadel — draw triggered
+      return state.result === GameResult.DRAW_CITADEL
+
+    case 'ppStage1':
+      // White Pawn of Pawns has reached the back rank at least once
+      return state.whitePawnOfPawnsStage >= PawnOfPawnsStage.STAGE1_ON_BACK_RANK
 
     default:
       return false
