@@ -20,7 +20,7 @@ import { WHITE_CITADEL, BLACK_CITADEL } from '../../core/constants'
 export const VB_SQ      = 100   // square size
 export const VB_BOARD_X = 140   // left offset (room for rank labels + black citadel)
 export const VB_BOARD_Y = 10    // top offset
-export const VB_W       = 1350  // total viewBox width
+export const VB_W       = 1380  // total viewBox width (symmetric padding: 40px each side)
 export const VB_H       = 1050  // total viewBox height
 
 const FILES = 11
