@@ -2,7 +2,7 @@
 // TAMERLANE SIEGE — App Root
 // src/App.tsx
 //
-// Screens:  'home' | 'pvp' | 'ai' | 'tutorial' | 'tutorialPlay'
+// Screens:  'home' | 'pvp' | 'ai' | 'tutorial' | 'tutorialPlay' | 'puzzle'
 //
 // AI search runs in a Web Worker via useAI hook — no main-thread blocking.
 // =============================================================================
@@ -18,6 +18,7 @@ import { MoveList }      from './ui/components/MoveList'
 import { GameOverModal } from './ui/components/GameOverModal'
 import { HowToPlay }       from './ui/components/HowToPlay'
 import { TutorialScreen }  from './ui/components/TutorialScreen'
+import { PuzzleScreen }    from './ui/components/PuzzleScreen'
 import { useAI }         from './ui/hooks/useAI'
 import { DIFFICULTY_LABELS } from './ai/difficulty'
 import { saveGameLog, getGameStats, resultToWinner, exportGameLogs } from './gameLog'
@@ -27,7 +28,7 @@ import type { GameStats } from './gameLog'
 // Types
 // =============================================================================
 
-type Screen = 'home' | 'pvp' | 'ai' | 'tutorial' | 'tutorialPlay'
+type Screen = 'home' | 'pvp' | 'ai' | 'tutorial' | 'tutorialPlay' | 'puzzle'
 
 declare global {
   interface Window {
@@ -46,13 +47,14 @@ interface HomeScreenProps {
   onPvP:           () => void
   onAI:            (difficulty: number) => void
   onTutorial:      () => void
+  onDailyPuzzle:   () => void
   onRulesRef:      () => void
   initDiff:        number
   stats:           GameStats
   onExport:        () => void
 }
 
-function HomeScreen({ onPvP, onAI, onTutorial, onRulesRef, initDiff, stats, onExport }: HomeScreenProps) {
+function HomeScreen({ onPvP, onAI, onTutorial, onDailyPuzzle, onRulesRef, initDiff, stats, onExport }: HomeScreenProps) {
   const [diff, setDiff] = useState(initDiff)
 
   const card: React.CSSProperties = {
@@ -102,6 +104,10 @@ function HomeScreen({ onPvP, onAI, onTutorial, onRulesRef, initDiff, stats, onEx
         <button style={{ ...btnBase, background: 'var(--btn-primary-bg)', color: 'var(--btn-primary-text)' }}
           onClick={() => onAI(diff)}>
           Play vs AI
+        </button>
+        <button style={{ ...btnBase, background: 'linear-gradient(135deg, #8B6914 0%, #C9A227 100%)', color: '#FFF' }}
+          onClick={onDailyPuzzle}>
+          Daily Puzzle
         </button>
         <button style={{ ...btnBase, background: 'var(--btn-secondary-bg)', color: 'var(--btn-secondary-text)' }}
           onClick={onPvP}>
@@ -343,6 +349,10 @@ export default function App() {
     setScreen('tutorialPlay')
   }, [])
 
+  const goPuzzle = useCallback(() => {
+    setScreen('puzzle')
+  }, [])
+
   const goRulesRef = useCallback(() => {
     setScreen('tutorial')
   }, [])
@@ -443,6 +453,7 @@ export default function App() {
         onPvP={startPvP}
         onAI={startAI}
         onTutorial={goTutorial}
+        onDailyPuzzle={goPuzzle}
         onRulesRef={goRulesRef}
         initDiff={aiDifficulty}
         stats={stats}
@@ -457,6 +468,10 @@ export default function App() {
 
   if (screen === 'tutorialPlay') {
     return <TutorialScreen onBack={() => setScreen('home')} />
+  }
+
+  if (screen === 'puzzle') {
+    return <PuzzleScreen onBack={() => setScreen('home')} />
   }
 
   return (
